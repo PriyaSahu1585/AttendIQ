@@ -43,39 +43,24 @@ class VideoCamera:
             self.video.release()
 
     def draw_premium_face_overlay(self, frame, x, y, w, h, label, box_color, is_capturing):
-        """Draw high-fidelity corners, pulsing autofocus animation, text badge, and laser sweep."""
-        # 1. Animated corner bracket length (pulsing sine wave)
-        pulse = np.sin(time.time() * 8)
-        d = int(16 + 4 * pulse)
-        t_corner = 3
-        t_box = 1
+        """Draw a clean, minimalist portrait frame and text badge (warm, human aesthetic)."""
+        t_box = 2
         
-        # 2. Draw thin outer bounding box
+        # 1. Draw elegant thin bounding box around the student's face
         cv2.rectangle(frame, (x, y), (x + w, y + h), box_color, t_box)
         
-        # 3. Draw thick corner brackets
-        # Top-Left
-        cv2.line(frame, (x, y), (x + d, y), box_color, t_corner)
-        cv2.line(frame, (x, y), (x, y + d), box_color, t_corner)
-        # Top-Right
-        cv2.line(frame, (x + w, y), (x + w - d, y), box_color, t_corner)
-        cv2.line(frame, (x + w, y), (x + w, y + d), box_color, t_corner)
-        # Bottom-Left
-        cv2.line(frame, (x, y + h), (x + d, y + h), box_color, t_corner)
-        cv2.line(frame, (x, y + h), (x, y + h - d), box_color, t_corner)
-        # Bottom-Right
-        cv2.line(frame, (x + w, y + h), (x + w - d, y + h), box_color, t_corner)
-        cv2.line(frame, (x + w, y + h), (x + w, y + h - d), box_color, t_corner)
-        
-        # 4. Animated localized laser sweep inside face box
-        sweep_y = y + int(((time.time() * 1.2) % 1.0) * h)
-        cv2.line(frame, (x + 2, sweep_y), (x + w - 2, sweep_y), box_color, 2)
-        
-        # 5. Text pill badge background and foreground
-        font_scale = 1.58
+        # 2. Text badge background and name tag
+        font_scale = 0.58
         font_thickness = 2
         (text_width, text_height), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_thickness)
-        badge_h = 30
+        
+        # Padding around text
+        pad_x = 10
+        pad_y = 6
+        
+        badge_w = text_width + (pad_x * 2)
+        badge_h = text_height + (pad_y * 2)
+        
         badge_y1 = y - badge_h - 2
         badge_y2 = y - 2
         if badge_y1 < 0:
@@ -83,17 +68,17 @@ class VideoCamera:
             badge_y2 = y + h + badge_h + 2
             
         badge_x1 = x
-        badge_x2 = x + text_width + 16
+        badge_x2 = x + badge_w
         
-        # Draw translucent badge background
-        badge_bg = (18, 18, 20)
+        # Draw translucent badge background (warm dark charcoal)
+        badge_bg = (24, 24, 27) # Dark warm grey (BGR representation)
         cv2.rectangle(frame, (badge_x1, badge_y1), (badge_x2, badge_y2), badge_bg, -1)
-        # Match thin badge border to status box_color
+        # Match thin badge border to the warm box_color
         cv2.rectangle(frame, (badge_x1, badge_y1), (badge_x2, badge_y2), box_color, 1)
         
-        # Draw text inside badge
-        text_y = badge_y2 - 8 if badge_y1 < y else badge_y1 + 22
-        cv2.putText(frame, label, (badge_x1 + 8, text_y), 
+        # Draw name text inside badge
+        text_y = badge_y2 - pad_y if badge_y1 < y else badge_y1 + pad_y + text_height
+        cv2.putText(frame, label, (badge_x1 + pad_x, text_y), 
                     cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
 
     def start_registration(self, student_id):

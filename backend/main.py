@@ -31,6 +31,12 @@ class MarkAttendanceRequest(BaseModel):
     date: str
     status: str
 
+class StudentCreateRequest(BaseModel):
+    name: str
+
+class StudentUpdateRequest(BaseModel):
+    name: str
+
 def gen(camera_obj):
     """Video streaming generator function."""
     while True:
@@ -119,6 +125,53 @@ async def get_status():
             "training_logs": camera.training_logs
         }
     return status_data
+
+@app.post("/api/students")
+async def create_student(payload: StudentCreateRequest):
+    """CRUD Create: Add a student manually (without starting camera frame capture)."""
+    name = payload.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Student name cannot be empty")
+        
+    clean_name = "".join(c for c in name if c.isalnum() or c.isspace())
+    if not clean_name:
+        raise HTTPException(status_code=400, detail="Invalid student name")
+        
+    success, result = tracker.create_student_manual(clean_name)
+    if not success:
+        raise HTTPException(status_code=400, detail=result)
+        
+    return {"success": True, "student_id": result, "message": f"Student '{clean_name}' created manually."}
+
+@app.put("/api/students/{student_id}")
+async def update_student(student_id: str, payload: StudentUpdateRequest):
+    """CRUD Update: Edit student's name."""
+    name = payload.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Student name cannot be empty")
+        
+    clean_name = "".join(c for c in name if c.isalnum() or c.isspace())
+    if not clean_name:
+        raise HTTPException(status_code=400, detail="Invalid student name")
+        
+    success, message = tracker.update_student(student_id, clean_name)
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+        
+    return {"success": True, "message": message}
+
+@app.delete("/api/students/{student_id}")
+async def delete_student(student_id: str):
+    """CRUD Delete: Delete student, delete their face data, and run AI retraining in background."""
+    success, message = tracker.delete_student(student_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=message)
+        
+    # Trigger background Keras retraining to rebuild mapping/classifier excluding this student
+    import threading
+    threading.Thread(target=camera.run_training_in_background, daemon=True).start()
+    
+    return {"success": True, "message": f"{message} Background AI retraining started."}
 
 if __name__ == "__main__":
     import uvicorn
