@@ -1,6 +1,6 @@
-# Aura Class Hub
+# AttendIQ
 
-Aura Class Hub is a warm, reliable, and human-centered classroom management portal designed to simplify attendance and student records. Built on-device with privacy at its core, Aura recognizes face shapes locally to automate attendance sheet check-ins without cloud database syncs or external latencies.
+AttendIQ is a warm, reliable, and human-centered classroom management portal designed to simplify attendance and student records. Built on-device with privacy at its core, Aura recognizes face shapes locally to automate attendance sheet check-ins without cloud database syncs or external latencies.
 
 ## Human-Centric Design Principles
 
